@@ -1,0 +1,252 @@
+---
+const siteBase = 'https://www.designresponsibly.com';
+const canonicalURL = `${siteBase}/legal/`;
+const ogImage = `${siteBase}/assets/og-image.png`;
+const fullTitle = 'Legal & Policies | Design Responsibly';
+const description = "Design Responsibly's legal policies, terms, and compliance documents.";
+---
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{fullTitle}</title>
+  <meta name="description" content={description} />
+  <link rel="canonical" href={canonicalURL} />
+  <link rel="icon" href="/favicon.ico" />
+
+  <meta property="og:title" content={fullTitle} />
+  <meta property="og:description" content={description} />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content={canonicalURL} />
+  <meta property="og:image" content={ogImage} />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={fullTitle} />
+  <meta name="twitter:description" content={description} />
+  <meta name="twitter:image" content={ogImage} />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="/" aria-label="Design Responsibly home">
+        <img src="/assets/dr_logo.png" alt="Design Responsibly" width="140" class="header-logo" />
+      </a>
+    </div>
+  </header>
+
+  <main class="legal-index-main">
+    <div class="legal-index-content">
+      <div class="page-header">
+        <h1>Legal &amp; Policies</h1>
+        <p class="page-subhead">Our policies, terms, and compliance documents.</p>
+      </div>
+
+      <nav class="doc-list" aria-label="Legal documents">
+        <a href="/legal/privacy-policy" class="doc-card">
+          <div class="doc-card-content">
+            <span class="doc-title">Privacy Policy</span>
+            <span class="doc-desc">How we collect, use, and protect your personal information.</span>
+          </div>
+          <span class="doc-arrow" aria-hidden="true">→</span>
+        </a>
+      </nav>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <a href="/" aria-label="Design Responsibly home">
+        <img src="/assets/dr_logo.png" alt="Design Responsibly" width="120" class="footer-logo" />
+      </a>
+      <p class="footer-tagline">Trusted creator payment partner for brands that value relationships.</p>
+      <nav class="footer-nav" aria-label="Footer navigation">
+        <a href="/legal">Legal</a>
+        <a
+          href="https://www.linkedin.com/company/designresponsibly/"
+          target="_blank"
+          rel="noopener noreferrer"
+        >LinkedIn</a>
+      </nav>
+    </div>
+  </footer>
+</body>
+</html>
+
+<style>
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: #F5F7FA;
+    color: #0F172A;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  img { max-width: 100%; height: auto; display: block; }
+  a { color: inherit; }
+
+  .site-header {
+    background: #ffffff;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+    padding: 0 40px;
+  }
+
+  .header-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    height: 64px;
+    display: flex;
+    align-items: center;
+  }
+
+  .header-logo {
+    height: 28px;
+    width: auto;
+  }
+
+  .legal-index-main {
+    padding: 64px 40px 100px;
+  }
+
+  .legal-index-content {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  .page-header {
+    margin-bottom: 48px;
+  }
+
+  .page-header h1 {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: clamp(32px, 5vw, 48px);
+    font-weight: 700;
+    color: #0F172A;
+    line-height: 1.15;
+    margin-bottom: 12px;
+  }
+
+  .page-subhead {
+    font-size: 16px;
+    color: #94A3B8;
+    line-height: 1.6;
+  }
+
+  .doc-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .doc-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #ffffff;
+    border: 1px solid rgba(15, 23, 42, 0.1);
+    border-radius: 12px;
+    padding: 24px 28px;
+    text-decoration: none;
+    transition:
+      border-color 0.2s,
+      box-shadow 0.2s;
+    min-height: 44px;
+  }
+
+  .doc-card:hover {
+    border-color: rgba(14, 165, 233, 0.4);
+    box-shadow: 0 2px 12px rgba(14, 165, 233, 0.06);
+  }
+
+  .doc-card-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .doc-title {
+    font-weight: 600;
+    font-size: 15px;
+    color: #0F172A;
+  }
+
+  .doc-desc {
+    font-size: 13px;
+    color: #94A3B8;
+    line-height: 1.5;
+  }
+
+  .doc-arrow {
+    color: #94A3B8;
+    font-size: 18px;
+    transition:
+      transform 0.2s,
+      color 0.2s;
+    flex-shrink: 0;
+    margin-left: 16px;
+  }
+
+  .doc-card:hover .doc-arrow {
+    transform: translateX(4px);
+    color: #0EA5E9;
+  }
+
+  .site-footer {
+    background: #ffffff;
+    border-top: 2px solid #0A0F1E;
+    padding: 48px 40px;
+  }
+
+  .footer-inner {
+    max-width: 720px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .footer-logo {
+    height: 26px;
+    width: auto;
+  }
+
+  .footer-tagline {
+    font-size: 13px;
+    color: #64748B;
+    line-height: 1.5;
+  }
+
+  .footer-nav {
+    display: flex;
+    gap: 20px;
+    padding-top: 4px;
+  }
+
+  .footer-nav a {
+    font-size: 13px;
+    color: #64748B;
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .footer-nav a:hover { color: #0F172A; }
+
+  @media (max-width: 767px) {
+    .site-header { padding: 0 24px; }
+    .legal-index-main { padding: 48px 24px 72px; }
+    .site-footer { padding: 48px 24px; }
+  }
+</style>
