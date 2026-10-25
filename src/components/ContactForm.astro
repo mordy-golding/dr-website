@@ -1,0 +1,276 @@
+---
+import { PUBLIC_TURNSTILE_SITE_KEY } from 'astro:env/client';
+
+const volumes = [
+  { value: 'under-50', label: 'Under 50' },
+  { value: '50-200', label: '50–200' },
+  { value: '200-500', label: '200–500' },
+  { value: '500-plus', label: '500+' },
+];
+
+const locations = [
+  { value: 'us', label: 'U.S. only' },
+  { value: 'intl', label: 'Outside the U.S.' },
+  { value: 'both', label: 'Both' },
+];
+---
+<div class="form-wrap">
+  <form class="form" action="/api/contact" method="post" aria-label="Talk to us" data-contact-form>
+    <div class="pair">
+      <div class="field">
+        <label for="f-name">Name</label>
+        <input id="f-name" name="name" type="text" autocomplete="name" maxlength="200" required />
+      </div>
+      <div class="field">
+        <label for="f-company">Company</label>
+        <input id="f-company" name="company" type="text" autocomplete="organization" maxlength="200" required />
+      </div>
+    </div>
+    <div class="field">
+      <label for="f-email">Work email</label>
+      <input id="f-email" name="email" type="email" autocomplete="email" maxlength="254" required />
+    </div>
+
+    <fieldset>
+      <legend>Payments per quarter</legend>
+      <div class="choices">
+        {volumes.map((o) => (
+          <label class="choice"><input type="radio" name="volume" value={o.value} />{o.label}</label>
+        ))}
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Where are your payees?</legend>
+      <div class="choices">
+        {locations.map((o) => (
+          <label class="choice"><input type="radio" name="where" value={o.value} />{o.label}</label>
+        ))}
+      </div>
+    </fieldset>
+
+    <div class="field">
+      <label for="f-notes">Anything else? <span class="optional">(optional)</span></label>
+      <textarea id="f-notes" name="notes" rows="3" maxlength="5000"></textarea>
+    </div>
+
+    <!-- Spam traps: a field people never see, and the time the form was shown. -->
+    <div class="trap" aria-hidden="true">
+      <label for="f-website">Website</label>
+      <input id="f-website" name="website" type="text" tabindex="-1" autocomplete="off" />
+    </div>
+    <input type="hidden" name="started" value="" data-started />
+
+    <div class="cf-turnstile" data-sitekey={PUBLIC_TURNSTILE_SITE_KEY} data-appearance="interaction-only" data-theme="light"></div>
+
+    <p class="error" role="alert" data-error hidden></p>
+
+    <div class="submit-row">
+      <button type="submit" class="btn btn-primary submit" data-submit>Talk to us</button>
+      <span class="muted note">We'll reply within one business day.</span>
+    </div>
+    <noscript><p class="error">This form needs JavaScript turned on to send.</p></noscript>
+  </form>
+
+  <div class="thanks" role="status" tabindex="-1" data-thanks hidden>
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"></path></svg>
+    <p>Thanks — we'll reply within one business day.</p>
+  </div>
+</div>
+
+<script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+
+<script>
+  const GENERIC_ERROR = 'Something went wrong sending your message. Please try again in a moment.';
+
+  for (const form of document.querySelectorAll<HTMLFormElement>('[data-contact-form]')) {
+    const wrap = form.parentElement!;
+    const thanks = wrap.querySelector<HTMLElement>('[data-thanks]')!;
+    const errorEl = form.querySelector<HTMLElement>('[data-error]')!;
+    const submit = form.querySelector<HTMLButtonElement>('[data-submit]')!;
+    form.querySelector<HTMLInputElement>('[data-started]')!.value = String(Date.now());
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      errorEl.hidden = true;
+      submit.disabled = true;
+      submit.textContent = 'Sending…';
+
+      try {
+        const res = await fetch(form.action, {
+          method: 'POST',
+          body: new FormData(form),
+          headers: { Accept: 'application/json' },
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.ok) throw new Error(data.error || GENERIC_ERROR);
+
+        form.hidden = true;
+        thanks.hidden = false;
+        thanks.focus();
+      } catch (err) {
+        errorEl.textContent = err instanceof Error && err.message ? err.message : GENERIC_ERROR;
+        errorEl.hidden = false;
+        // A Turnstile token is single-use; get a fresh one for the retry.
+        (window as any).turnstile?.reset();
+      } finally {
+        submit.disabled = false;
+        submit.textContent = 'Talk to us';
+      }
+    });
+  }
+</script>
+
+<style>
+  .form-wrap {
+    flex: 1 1 480px;
+    min-width: 0;
+  }
+
+  .form, .thanks {
+    background: var(--card);
+    color: var(--ink);
+    border-radius: 20px;
+    padding: clamp(24px, 3vw, 40px);
+  }
+
+  .form {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  .pair {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 18px;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  label, legend {
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .optional { font-weight: 400; color: var(--muted); }
+
+  input[type='text'], input[type='email'], textarea {
+    font: inherit;
+    font-size: 16px;
+    padding: 12px 14px;
+    min-height: 48px;
+    border: 1.5px solid #8C8170;
+    border-radius: 10px;
+    background: #FFFFFF;
+    color: var(--ink);
+  }
+
+  textarea { resize: vertical; }
+
+  input:focus-visible, textarea:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 1px;
+    border-color: var(--ink);
+  }
+
+  fieldset {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+  }
+
+  legend {
+    padding: 0;
+    margin-bottom: 10px;
+  }
+
+  .choices {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .choice {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 16px;
+    border: 1.5px solid #8C8170;
+    border-radius: 999px;
+    font-weight: 400;
+    cursor: pointer;
+  }
+
+  .choice:has(input:checked) {
+    border-color: var(--forest);
+    box-shadow: inset 0 0 0 1px var(--forest);
+  }
+
+  .choice:has(input:focus-visible) {
+    outline: 3px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .choice input {
+    accent-color: var(--forest);
+    width: 18px;
+    height: 18px;
+    margin: 0;
+  }
+
+  .choice input:focus-visible { outline: none; }
+
+  .trap {
+    position: absolute;
+    left: -10000px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  .error {
+    color: var(--accent);
+    font-weight: 600;
+    font-size: 15px;
+  }
+
+  .submit-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .submit {
+    padding: 15px 30px;
+    min-height: 48px;
+    font-weight: 700;
+    font-size: 17px;
+  }
+
+  .submit:disabled { opacity: 0.7; cursor: progress; }
+
+  .note { font-size: 14px; }
+
+  .thanks {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-family: var(--font-display);
+    font-size: 24px;
+    line-height: 1.3;
+    color: var(--forest);
+  }
+
+  .thanks[hidden], .form[hidden] { display: none; }
+
+  .thanks:focus { outline: none; }
+  .thanks svg { flex: none; }
+</style>

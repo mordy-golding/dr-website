@@ -1,0 +1,59 @@
+---
+import Logo from './Logo.astro';
+---
+<footer class="site-footer on-dark">
+  <div class="container inner">
+    <div class="about">
+      <div class="logo-wrap"><Logo variant="dark" height={32} /></div>
+      <p>Design Responsibly is a boutique payment partner for creator, community, and event programs at large companies. We become your single approved vendor, then onboard, pay, and support every payee in 60+ countries.</p>
+    </div>
+    <nav aria-label="Footer" class="links">
+      <a href="https://www.linkedin.com/company/designresponsibly/" rel="noopener noreferrer">LinkedIn</a>
+      <a href="/legal">Legal</a>
+      <a href="/#contact">Contact</a>
+    </nav>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    background: var(--footer);
+    color: var(--on-dark-muted);
+  }
+
+  .inner {
+    padding-top: 56px;
+    padding-bottom: 56px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 40px;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .about {
+    flex: 1 1 420px;
+    min-width: 0;
+    max-width: 560px;
+    font-size: 15px;
+  }
+
+  .logo-wrap { margin-bottom: 16px; }
+
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 28px;
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .links a {
+    color: var(--on-dark);
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .links a:hover { color: var(--gold); }
+</style>

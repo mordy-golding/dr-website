@@ -2,6 +2,7 @@
 title: Privacy Policy
 last_updated: "2025-05-04"
 description: How Design Responsibly collects, uses, and protects your personal information.
+summary: How we collect, use, and protect personal information.
 ---
 
 ## 1. Introduction

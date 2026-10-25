@@ -1,6 +1,8 @@
 ---
 import { getCollection, render } from 'astro:content';
-import LegalLayout from '../../layouts/LegalLayout.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/SiteHeader.astro';
+import { formatDate } from '../../lib/format-date';
 
 export async function getStaticPaths() {
   const docs = await getCollection('legal');
@@ -11,15 +13,203 @@ export async function getStaticPaths() {
 }
 
 const { doc } = Astro.props;
-const { Content } = await render(doc);
+const { Content, headings } = await render(doc);
 const slug = doc.id.replace(/\.mdx?$/, '');
+const contents = headings
+  .filter((h) => h.depth === 2)
+  .map((h) => ({ slug: h.slug, text: h.text.replace(/^\d+\.\s*/, '') }));
 ---
-
-<LegalLayout
-  title={doc.data.title}
-  lastUpdated={doc.data.last_updated}
-  description={doc.data.description}
-  slug={slug}
+<BaseLayout
+  title={`${doc.data.title} | Design Responsibly`}
+  description={doc.data.description ?? doc.data.title}
+  path={`/legal/${slug}`}
 >
-  <Content />
-</LegalLayout>
+  <SiteHeader slot="header">
+    <a href="/legal" class="back">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg>All policies</a>
+  </SiteHeader>
+
+  <div class="container intro">
+    <nav aria-label="Breadcrumb" class="crumbs"><a href="/legal">Legal &amp; Policies</a> / <span aria-current="page">{doc.data.title}</span></nav>
+    <h1>{doc.data.title}</h1>
+    <p class="updated">Last updated {formatDate(doc.data.last_updated)}</p>
+  </div>
+
+  <div class="container layout">
+    {contents.length > 0 && (
+      <nav aria-label="On this page" class="toc">
+        <p class="toc-title">On this page</p>
+        <ol>
+          {contents.map((c) => <li><a href={`#${c.slug}`}>{c.text}</a></li>)}
+        </ol>
+      </nav>
+    )}
+    <article class="policy">
+      <Content />
+    </article>
+  </div>
+</BaseLayout>
+
+<style>
+  .back { font-weight: 600; }
+
+  .intro { padding-top: 80px; }
+
+  .crumbs {
+    margin-bottom: 14px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--muted);
+  }
+
+  .crumbs a { color: var(--muted); }
+
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(44px, 5vw, 68px);
+    line-height: 1.04;
+    letter-spacing: -0.025em;
+  }
+
+  .updated {
+    margin-top: 16px;
+    display: inline-flex;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--forest);
+    border: 1.5px solid var(--forest);
+    border-radius: 999px;
+    padding: 4px 14px;
+  }
+
+  .layout {
+    padding-top: 56px;
+    padding-bottom: 120px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 64px;
+    align-items: flex-start;
+    line-height: 1.7;
+  }
+
+  .toc {
+    flex: 1 1 260px;
+    min-width: 0;
+    max-width: 300px;
+    border-top: 2px solid var(--ink);
+    padding-top: 18px;
+  }
+
+  @media (min-width: 900px) {
+    .toc { position: sticky; top: 24px; }
+  }
+
+  .toc-title {
+    margin-bottom: 12px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .toc ol {
+    margin: 0;
+    padding: 0 0 0 22px;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .toc a {
+    color: var(--ink);
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+
+  .toc a:hover { color: var(--accent); }
+
+  .policy {
+    flex: 999 1 560px;
+    min-width: 0;
+    max-width: 720px;
+  }
+
+  /* Markdown content */
+  .policy :global(.policy-section) {
+    padding-bottom: 36px;
+    margin-bottom: 36px;
+    border-bottom: 1px solid var(--border);
+    scroll-margin-top: 24px;
+  }
+
+  .policy :global(.policy-section:last-child) {
+    padding-bottom: 0;
+    margin-bottom: 0;
+    border-bottom: 0;
+  }
+
+  .policy :global(h2) {
+    margin: 0 0 14px;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 30px;
+    line-height: 1.2;
+    scroll-margin-top: 24px;
+  }
+
+  .policy :global(h2 .num) { color: var(--accent); }
+
+  .policy :global(p) { margin: 0 0 16px; }
+  .policy :global(p:last-child) { margin-bottom: 0; }
+
+  .policy :global(.policy-card) {
+    margin-top: 16px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 22px;
+  }
+
+  .policy :global(.policy-section > p + .policy-card) { margin-top: 24px; }
+
+  .policy :global(h3) {
+    margin: 0 0 12px;
+    font-size: 18px;
+    line-height: 1.4;
+  }
+
+  .policy :global(ul) {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .policy :global(li) {
+    position: relative;
+    padding-left: 20px;
+  }
+
+  .policy :global(li)::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.72em;
+    width: 8px;
+    height: 8px;
+    background: var(--forest);
+  }
+
+  .policy :global(.policy-contact) {
+    background: var(--forest);
+    color: var(--on-dark);
+    border-radius: 14px;
+    padding: 24px 26px;
+  }
+
+  .policy :global(.policy-contact a) { color: var(--gold); }
+</style>

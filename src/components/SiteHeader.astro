@@ -1,0 +1,65 @@
+---
+import Logo from './Logo.astro';
+
+interface Props {
+  homeHref?: string;
+}
+
+const { homeHref = '/' } = Astro.props;
+---
+<header class="site-header">
+  <nav aria-label="Main" class="container nav">
+    <a href={homeHref} class="home">
+      <Logo />
+    </a>
+    <div class="links">
+      <slot />
+    </div>
+  </nav>
+</header>
+
+<style>
+  .site-header {
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+  }
+
+  .nav {
+    padding-top: 18px;
+    padding-bottom: 18px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .home {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+  }
+
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: 28px;
+    row-gap: 4px;
+    font-size: 15px;
+    font-weight: 500;
+  }
+
+  .links :global(a:not(.btn)) {
+    color: var(--ink);
+    text-decoration: none;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .links :global(a:not(.btn):hover) {
+    color: var(--accent);
+  }
+</style>

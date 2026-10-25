@@ -1,0 +1,22 @@
+---
+interface Props {
+  variant?: 'light' | 'dark';
+  height?: number;
+}
+
+const { variant = 'light', height = 34 } = Astro.props;
+// Source artwork is 762×124.
+const src = variant === 'dark' ? '/assets/dr_logo_reversed.png' : '/assets/dr_logo.png';
+const width = Math.round((height * 762) / 124);
+---
+<img src={src} alt="Design Responsibly" width={width} height={height} class="logo" style={`--logo-h: ${height}px`} />
+
+<style>
+  .logo {
+    height: var(--logo-h);
+    width: auto;
+    max-width: 100%;
+    object-fit: contain;
+    object-position: left center;
+  }
+</style>

@@ -1,0 +1,291 @@
+---
+// Sample program account. Initial state is rendered statically; the script
+// below animates it. Behavior matches DR_POOL / step() in Main.dc.html.
+import { POOL, FUNDED, START, INITIAL_ROWS, formatMoney } from '../lib/account-sample';
+
+const pct = Math.round((START / FUNDED) * 100);
+---
+<div class="account card" data-account>
+  <div class="top">
+    <span class="title">Program account</span>
+    <div class="controls">
+      <span class="sample">Sample view</span>
+      <button type="button" class="toggle" data-toggle aria-label="Pause animation">
+        <svg class="icon-pause" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><rect x="2" y="1.5" width="2.6" height="9" fill="currentColor"></rect><rect x="7.4" y="1.5" width="2.6" height="9" fill="currentColor"></rect></svg>
+        <svg class="icon-play" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z" fill="currentColor"></path></svg>
+      </button>
+    </div>
+  </div>
+
+  <p class="balance-label">PO balance available</p>
+  <p class="balance" data-balance>{formatMoney(START)}</p>
+  <div class="bar" role="img" data-bar aria-label={`${pct} percent of funded PO remaining`}>
+    <div class="bar-fill" data-bar-fill style={`width: ${pct}%`}></div>
+  </div>
+  <div class="meta">
+    <span>of {formatMoney(FUNDED)} funded</span>
+    <span class="count" data-count>Live</span>
+  </div>
+
+  <ul class="rows" data-rows aria-live="off">
+    {INITIAL_ROWS.map((r) => {
+      const d = POOL[r.p];
+      return (
+        <li class="row">
+          <div><div class="role">{d.role}</div><div class="place">{d.place}</div></div>
+          <div class="right">
+            <span class="amount">{formatMoney(d.amount)}</span>
+            {r.status === 'paid' && <span class="status status-paid"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="6" fill="currentColor"></circle></svg>Paid</span>}
+            {r.status === 'approved' && <span class="status status-approved"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><rect x="1.5" y="1.5" width="9" height="9" transform="rotate(45 6 6)" fill="currentColor"></rect></svg>Approved</span>}
+            {r.status === 'onboarding' && <span class="status status-onboarding"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.8" fill="none" stroke="currentColor" stroke-width="2"></circle></svg>Onboarding</span>}
+          </div>
+        </li>
+      );
+    })}
+  </ul>
+  <p class="foot">Your balance and every payment, live, at any time.</p>
+
+  <template data-status-templates>
+    <span class="status status-paid"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="6" fill="currentColor"></circle></svg>Paid</span>
+    <span class="status status-approved"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><rect x="1.5" y="1.5" width="9" height="9" transform="rotate(45 6 6)" fill="currentColor"></rect></svg>Approved</span>
+    <span class="status status-onboarding"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.8" fill="none" stroke="currentColor" stroke-width="2"></circle></svg>Onboarding</span>
+  </template>
+</div>
+
+<script>
+  import { POOL, FUNDED, START, INITIAL_ROWS, formatMoney, type Row } from '../lib/account-sample';
+
+  const STEP_MS = 2600;
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-account]')) {
+    const toggle = root.querySelector<HTMLButtonElement>('[data-toggle]')!;
+    const balanceEl = root.querySelector<HTMLElement>('[data-balance]')!;
+    const bar = root.querySelector<HTMLElement>('[data-bar]')!;
+    const barFill = root.querySelector<HTMLElement>('[data-bar-fill]')!;
+    const countEl = root.querySelector<HTMLElement>('[data-count]')!;
+    const list = root.querySelector<HTMLElement>('[data-rows]')!;
+    const templates = root.querySelector<HTMLTemplateElement>('[data-status-templates]')!.content;
+
+    const statusNode = (status: Row['status']) =>
+      templates.querySelector(`.status-${status}`)!.cloneNode(true);
+
+    let balance = START;
+    let paidCount = 0;
+    let next = INITIAL_ROWS.length;
+    let rows: Row[] = INITIAL_ROWS.map((r) => ({ ...r }));
+    let timer: number | undefined;
+
+    function render() {
+      balanceEl.textContent = formatMoney(balance);
+      const pct = Math.round((balance / FUNDED) * 100);
+      barFill.style.width = `${pct}%`;
+      bar.setAttribute('aria-label', `${pct} percent of funded PO remaining`);
+      countEl.textContent =
+        paidCount > 0
+          ? `${paidCount} ${paidCount === 1 ? 'payment' : 'payments'} sent while you’ve been here`
+          : 'Live';
+
+      list.replaceChildren(
+        ...rows.map((r) => {
+          const d = POOL[r.p];
+          const li = document.createElement('li');
+          li.className = r.flash ? 'row flash' : 'row';
+          li.innerHTML = `<div><div class="role"></div><div class="place"></div></div><div class="right"><span class="amount"></span></div>`;
+          li.querySelector('.role')!.textContent = d.role;
+          li.querySelector('.place')!.textContent = d.place;
+          li.querySelector('.amount')!.textContent = formatMoney(d.amount);
+          li.querySelector('.right')!.append(statusNode(r.status));
+          return li;
+        }),
+      );
+    }
+
+    function step() {
+      rows = rows.map((r) => {
+        if (r.status === 'approved') {
+          balance -= POOL[r.p].amount;
+          paidCount += 1;
+          return { p: r.p, status: 'paid', flash: true };
+        }
+        if (r.status === 'onboarding') return { p: r.p, status: 'approved', flash: false };
+        return { p: r.p, status: r.status, flash: false };
+      });
+      if (balance < 60000) balance = START; // PO topped up, loop the sample
+      rows.unshift({ p: next % POOL.length, status: 'onboarding', flash: false });
+      rows = rows.slice(0, 4);
+      next += 1;
+      render();
+    }
+
+    function setRunning(running: boolean) {
+      window.clearInterval(timer);
+      timer = running ? window.setInterval(step, STEP_MS) : undefined;
+      root.classList.toggle('paused', !running);
+      toggle.setAttribute('aria-label', running ? 'Pause animation' : 'Play animation');
+    }
+
+    toggle.addEventListener('click', () => setRunning(timer === undefined));
+
+    render();
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    setRunning(!reduceMotion);
+  }
+</script>
+
+<style>
+  .account {
+    border-radius: 20px;
+    padding: 28px;
+    box-shadow: 0 24px 48px -28px rgba(35, 56, 43, 0.45);
+  }
+
+  .top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .title { font-weight: 700; font-size: 15px; }
+
+  .controls { display: flex; align-items: center; gap: 8px; }
+
+  .sample {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    padding: 3px 10px;
+  }
+
+  .toggle {
+    position: relative;
+    font: inherit;
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    border: 1px solid var(--rule);
+    background: var(--card);
+    color: var(--ink);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+  }
+
+  /* 44px touch target around the 32px visual button */
+  .toggle::before {
+    content: '';
+    position: absolute;
+    inset: -6px;
+  }
+
+  .toggle:hover { border-color: var(--ink); }
+
+  .icon-play { display: none; }
+  .paused .icon-play { display: block; }
+  .paused .icon-pause { display: none; }
+
+  .balance-label { margin: 22px 0 2px; font-size: 13px; color: var(--muted); }
+
+  .balance {
+    font-family: var(--font-display);
+    font-size: 44px;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .bar {
+    margin-top: 14px;
+    height: 12px;
+    border-radius: 999px;
+    background: #E6DCCB;
+    overflow: hidden;
+  }
+
+  .bar-fill {
+    height: 100%;
+    background: var(--forest);
+    transition: width 0.9s ease;
+  }
+
+  .meta {
+    margin-top: 8px;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .count {
+    font-weight: 600;
+    color: var(--forest);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .rows {
+    list-style: none;
+    margin: 24px 0 0;
+    padding: 0;
+    border-top: 1px solid #E6DCCB;
+  }
+
+  .rows :global(.row) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 10px;
+    margin: 0 -10px;
+    border-bottom: 1px solid #E6DCCB;
+    border-radius: 8px;
+    background: transparent;
+    transition: background 0.6s ease;
+  }
+
+  .rows :global(.row.flash) {
+    animation: flash 2.4s ease-out;
+  }
+
+  @keyframes flash {
+    0%, 40% { background: #E3EBDD; }
+    100% { background: transparent; }
+  }
+
+  .rows :global(.role) { font-weight: 600; font-size: 15px; }
+  .rows :global(.place) { font-size: 13px; color: var(--muted); }
+  .rows :global(.right) { display: flex; align-items: center; gap: 16px; }
+
+  .rows :global(.amount) {
+    font-weight: 600;
+    font-size: 15px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .account :global(.status) {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    width: 104px;
+  }
+
+  .account :global(.status-paid) { color: var(--forest); }
+  .account :global(.status-approved) { color: var(--accent); }
+  .account :global(.status-onboarding) { color: var(--muted); }
+
+  .foot { margin-top: 14px; font-size: 13px; color: var(--muted); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bar-fill { transition: none; }
+    .rows :global(.row.flash) { animation: none; background: #E3EBDD; }
+  }
+</style>
